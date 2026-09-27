@@ -132,6 +132,8 @@ def apply_override(path: str, text: str) -> str:
     ov = (yaml.safe_load(OVERRIDES.read_text()) or {}).get(path) or {}
     if "description" not in ov:
         return text
+    if ov.get("source_sha256") and ov["source_sha256"] != sha(en(path)):
+        print(f"HINWEIS {path}: englische Quelle seit Override geändert – description prüfen", file=sys.stderr)
     line = "description: " + json.dumps(ov["description"], ensure_ascii=False)
     new, n = re.subn(r"^description:.*$", lambda m: line, text, count=1, flags=re.M)
     if n != 1:
