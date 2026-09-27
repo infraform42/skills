@@ -1,15 +1,14 @@
 {
-  "name": "mattpocock",
+  "name": "infraform42",
   "owner": {
-    "name": "Matt Pocock",
-    "url": "https://www.aihero.dev"
+    "name": "infraform42"
   },
-  "description": "Matt Pocock's skills for real engineering, as an installable Claude Code plugin.",
+  "description": "Matt Pococks Agent-Skills auf Deutsch (Fork von mattpocock/skills).",
   "plugins": [
     {
-      "name": "mattpocock-skills",
+      "name": "mattpocock-skills-de",
       "source": "./",
-      "description": "Matt Pocock's agent skills for real engineering (grilling, spec/ticket flows, TDD, code review, domain modelling and more).",
+      "description": "Matt Pococks Agent-Skills auf Deutsch (Fork von mattpocock/skills).",
       "category": "engineering",
       "keywords": [
         "engineering",

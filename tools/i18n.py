@@ -98,7 +98,28 @@ def claude_cmd() -> list[str]:
     if "--tools" not in help_text:
         sys.exit("claude kennt --tools nicht – Claude Code aktualisieren")
     return ["claude", "-p", "--output-format", "json", "--model", MODEL,
-            "--tools", "", "--append-system-prompt", PROMPT.read_text()]
+            "--tools", "", "--permission-mode", "default",
+            "--system-prompt", PROMPT.read_text()]
+
+
+def clean(raw: str) -> str:
+    """Entfernt Vorrede und umschließenden Markdown-Fence (auch mit 4+ Backticks)."""
+    out = raw.strip()
+    lead = re.search(r"^---\n", out, re.M)
+    if lead and lead.start() > 0:
+        prefix, out = out[:lead.start()], out[lead.start():]
+        if re.search(r"`{3,}", prefix):
+            out = re.sub(r"\n`{3,}[ \t]*\Z", "", out.rstrip())
+    return out.rstrip() + "\n"
+
+
+def restore_fences(src: str, dst: str) -> str:
+    """Ersetzt die Codeblöcke der Übersetzung der Reihe nach durch die Originale."""
+    orig, got = fences(src), fences(dst)
+    if len(orig) != len(got):
+        raise ValueError(f"Anzahl Codeblöcke geändert: {len(orig)} → {len(got)}")
+    it = iter(orig)
+    return FENCE.sub(lambda m: next(it), dst)
 
 
 def translate(path: str) -> None:
@@ -111,8 +132,9 @@ def translate(path: str) -> None:
     data = json.loads(res.stdout)
     if data.get("is_error"):
         raise RuntimeError(str(data.get("result")))
-    out = data["result"].strip()
-    out = re.sub(r"\A```(?:markdown|md)?\n(.*)\n```\Z", r"\1", out, flags=re.S).rstrip() + "\n"
+    out = clean(data["result"])
+    out = restore_fences(src, out)
+    Path("/tmp/i18n_last_output.md").write_text(data["result"])
     verify(src, out)
     target = ROOT / path
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -136,7 +158,7 @@ def main() -> None:
             translate(rest[0])
         else:
             sys.exit(__doc__)
-    except (ValueError, RuntimeError) as e:
+    except (ValueError, RuntimeError, yaml.YAMLError) as e:
         sys.exit(f"FEHLER {rest[0] if rest else cmd}: {e}")
 
 

@@ -1,13 +1,13 @@
 ---
 name: grilling
-description: Grill the user relentlessly about a plan, decision, or idea. Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases.
+description: Grillt den Nutzer unnachgiebig zu einem Plan, einer Entscheidung oder einer Idee. Verwenden, wenn der Nutzer sein Denken einem Stresstest unterziehen will, oder bei jeder 'grill'-Auslöserphrase. „grill mich zu meinem Plan“, „stell mir kritische Fragen dazu“, „hinterfrag meine Entscheidung gründlich“, „nimm meine Idee auseinander“, „bohr bei diesem Vorhaben nach“
 ---
 
-Interview the user relentlessly until you reach a shared understanding. Map this as a **design tree**: every decision branches into the decisions that hang off it.
+Befrage den Nutzer unnachgiebig, bis ihr ein gemeinsames Verständnis erreicht habt. Bilde dies als **Entscheidungsbaum** ab: Jede Entscheidung verzweigt sich in die Entscheidungen, die von ihr abhängen.
 
-Work the tree in **rounds**. The **frontier** is every decision whose prerequisites are already settled: the questions you can ask _now_ without guessing at answers you haven't heard yet. Ask the whole frontier in one round: number each question and give your recommended answer. Then wait for the user's answers before the next round.
+Arbeite den Baum in **Runden** ab. Die **Frontier** (die offene Front) umfasst jede Entscheidung, deren Voraussetzungen bereits geklärt sind: die Fragen, die du _jetzt_ stellen kannst, ohne Antworten zu erraten, die du noch nicht gehört hast. Stelle die gesamte Frontier in einer Runde: nummeriere jede Frage und gib deine empfohlene Antwort an. Warte dann auf die Antworten des Nutzers, bevor die nächste Runde beginnt.
 
-Format a round like so:
+Formatiere eine Runde so:
 
 ```
 ❓ **Q1** - **<question title>**: <question body, might be multiple paragraphs, including multiple choices>
@@ -21,8 +21,8 @@ Format a round like so:
 ➡️ <your recommended answer>
 ```
 
-Each round the user answers reshapes the tree: settled decisions push the frontier outward and unblock questions that depended on them. Recompute the frontier and ask the next round. A question whose answer depends on another question still open in this round belongs to a _later_ round, not this one.
+Jede Runde formen die Antworten des Nutzers den Baum neu: geklärte Entscheidungen schieben die Frontier weiter nach außen und geben Fragen frei, die von ihnen abhingen. Berechne die Frontier neu und stelle die nächste Runde. Eine Frage, deren Antwort von einer anderen, in dieser Runde noch offenen Frage abhängt, gehört in eine _spätere_ Runde, nicht in diese.
 
-Finding _facts_ is your job, never the user's. When a frontier question needs a fact from the environment (filesystem, tools, etc.), dispatch a sub-agent to find it; don't ask the user for anything you could look up yourself. Don't block on it: a running exploration is an unsettled prerequisite, so only the questions downstream of it wait for the sub-agent to report; ask the rest of the frontier now. The _decisions_ are the user's: put each to them and wait.
+_Fakten_ zu ermitteln ist deine Aufgabe, niemals die des Nutzers. Wenn eine Frontier-Frage einen Fakt aus der Umgebung benötigt (Dateisystem, Tools usw.), setze einen Subagenten ein, um ihn zu finden; frag den Nutzer nichts, was du selbst nachschlagen könntest. Blockiere dabei nicht: eine laufende Recherche ist eine ungeklärte Voraussetzung, also warten nur die davon abhängigen Fragen auf die Rückmeldung des Subagenten; stelle den Rest der Frontier bereits jetzt. Die _Entscheidungen_ liegen beim Nutzer: lege sie ihm vor und warte.
 
-The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. Do not act on it until the user confirms you have reached a shared understanding.
+Die Sitzung ist abgeschlossen, wenn die Frontier leer ist: jeder Zweig des Entscheidungsbaums besucht, nichts stillschweigend angenommen. Setze nichts davon um, bevor der Nutzer bestätigt hat, dass ihr ein gemeinsames Verständnis erreicht habt.
