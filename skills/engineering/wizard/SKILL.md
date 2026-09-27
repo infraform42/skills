@@ -1,44 +1,44 @@
 ---
 name: wizard
-description: Generate an interactive bash wizard that walks a human through steps only they can perform. Use when provisioning infrastructure, setting up credentials or CI secrets, walking an unfamiliar third-party dashboard, or running a one-off migration or cutover. Don't invoke this for steps the agent can perform itself.
+description: Generiert einen interaktiven Bash-Wizard, der einen Menschen Schritt für Schritt durch eine manuelle Prozedur führt, die nur er selbst ausführen kann. Wird verwendet beim Provisionieren von Infrastruktur, beim Einrichten von Credentials oder CI-Secrets, beim Durchlaufen eines unbekannten Drittanbieter-Dashboards oder bei einer einmaligen Migration oder Umstellung (cutover). Nicht aufrufen für Schritte, die der Agent selbst ausführen kann. „erstell mir einen Wizard für das Setup“, „bau mir ein Skript, das mich durch die Einrichtung führt“, „ich brauch eine geführte Schritt-für-Schritt-Anleitung als Bash-Skript“, „leg mir einen Setup-Wizard für die Credentials an“, „schreib mir ein Skript für die Migration, das mich durchklickt“
 ---
 
 # Wizard
 
-A **wizard** is a bash script that walks a human, step by step, through a manual procedure that's tedious to do by hand and tedious to re-explain to an AI every time. It opens each URL, says exactly what to click and copy, captures the values, writes them where they belong (`.env`, GitHub secrets), confirms at every stage, and shows how many stages are left. It might configure third-party services, run a one-off migration, or move the project from one state to another.
+Ein **Wizard** ist ein Bash-Skript, das einen Menschen Schritt für Schritt durch eine manuelle Prozedur führt, die mühsam von Hand zu erledigen und mühsam jedes Mal neu einer KI zu erklären ist. Es öffnet jede URL, sagt genau, was zu klicken und zu kopieren ist, erfasst die Werte, schreibt sie dorthin, wo sie hingehören (`.env`, GitHub-Secrets), bestätigt bei jeder Stufe und zeigt, wie viele Stufen noch übrig sind. Es kann Drittanbieter-Dienste konfigurieren, eine einmalige Migration durchführen oder das Projekt von einem Zustand in einen anderen überführen.
 
-The delightful UX is already solved by [template.sh](template.sh): stage-by-stage progress, confirmation gates, cross-platform URL opening (including WSL), hidden secret entry, idempotent `.env` upserts, `gh secret`/`gh variable` writes, and a closing summary. **Your job is only to scope the procedure and author its stages.** The library above the `STAGES` marker is identical in every wizard; that consistency is the point: never hand-edit it.
+Die angenehme UX ist bereits durch [template.sh](template.sh) gelöst: Fortschritt Stufe für Stufe, Bestätigungs-Gates, plattformübergreifendes Öffnen von URLs (auch unter WSL), verdeckte Eingabe von Secrets, idempotente `.env`-Upserts, `gh secret`/`gh variable`-Schreibvorgänge und eine abschließende Zusammenfassung. **Deine Aufgabe ist nur, die Prozedur einzugrenzen und ihre Stufen zu verfassen.** Die Bibliothek oberhalb der `STAGES`-Markierung ist in jedem Wizard identisch; diese Konsistenz ist der Sinn der Sache: Bearbeite sie nie von Hand.
 
-A wizard is ephemeral by default: built for one run, saved to a scratch or `scripts/` path, deleted when the job's done. Commit it only when the user wants a repeatable setup path that should live in the repo.
+Ein Wizard ist standardmäßig vergänglich: gebaut für einen einzigen Durchlauf, gespeichert unter einem Scratch- oder `scripts/`-Pfad, gelöscht, sobald die Aufgabe erledigt ist. Committe ihn nur, wenn der Nutzer einen wiederholbaren Setup-Pfad möchte, der im Repo bleiben soll.
 
-## Process
+## Prozess
 
-### 1. Scope the procedure
+### 1. Die Prozedur eingrenzen
 
-Work out every manual step the human must take and every value that gets captured along the way. Read the repo first, don't ask cold:
+Arbeite jeden manuellen Schritt heraus, den der Mensch ausführen muss, und jeden Wert, der dabei erfasst wird. Lies zuerst das Repo, frag nicht ins Blaue:
 
-- For setup: `.env`, `.env.example`, `.env.*`, `README`, `docker-compose*`, framework config, and `.github/workflows/*` (every `secrets.*` / `vars.*` reference is a value the wizard must produce).
-- For a migration or transition: the current state, the target state, and the irreversible actions between them.
+- Für ein Setup: `.env`, `.env.example`, `.env.*`, `README`, `docker-compose*`, Framework-Konfiguration und `.github/workflows/*` (jede `secrets.*`/`vars.*`-Referenz ist ein Wert, den der Wizard erzeugen muss).
+- Für eine Migration oder Umstellung: den aktuellen Zustand, den Zielzustand und die nicht umkehrbaren Aktionen dazwischen.
 
-Then show the user the ordered list of stages and the values each produces, and confirm: they may add, drop, or reorder.
+Zeig dem Nutzer anschließend die geordnete Liste der Stufen und die Werte, die jede davon erzeugt, und lass sie bestätigen: Er darf ergänzen, streichen oder umsortieren.
 
-**Done when:** every stage is named in order, and for each captured value you know (a) where the human gets it, (b) where it's written (`.env`, a GitHub secret, both, or nowhere; some stages are pure actions), and (c) whether it's secret (hidden entry) or public.
+**Fertig, wenn:** jede Stufe der Reihe nach benannt ist und du für jeden erfassten Wert weißt, (a) woher der Mensch ihn bekommt, (b) wohin er geschrieben wird (`.env`, ein GitHub-Secret, beides oder nirgendwohin; manche Stufen sind reine Aktionen), und (c) ob er geheim ist (verdeckte Eingabe) oder öffentlich.
 
-### 2. Map each stage's journey
+### 2. Den Weg jeder Stufe abbilden
 
-For each stage, write the precise path a human follows: which URL to open, what to do there, where a value is shown, which variable it fills: e.g. "Dashboard → Developers → API keys → Reveal test key → copy". Where you don't actually know the current UI or the exact command, say so and ask the user or check the docs: never invent steps that may not exist.
+Schreib für jede Stufe den genauen Pfad, dem ein Mensch folgt: welche URL zu öffnen ist, was dort zu tun ist, wo ein Wert angezeigt wird, welche Variable er befüllt: z. B. "Dashboard → Developers → API keys → Reveal test key → copy". Wo du die aktuelle UI oder den genauen Befehl nicht wirklich kennst, sag das und frag den Nutzer oder sieh in der Dokumentation nach: Erfinde nie Schritte, die es vielleicht nicht gibt.
 
-**Done when:** every stage traces to concrete instructions a stranger could follow.
+**Fertig, wenn:** jede Stufe zu konkreten Anweisungen führt, denen ein Fremder folgen könnte.
 
-### 3. Author the wizard
+### 3. Den Wizard verfassen
 
-Copy `template.sh` to the target path. Replace the example stage with one `stage` per step, in dependency order. Use the library helpers: `stage`, `say`/`step`, `open_url`, `ask`/`ask_secret`, `write_env`, `set_secret`/`set_var`, `pause`/`confirm`. Set `TOTAL_STAGES` to the number of stages you wrote.
+Kopiere `template.sh` an den Zielpfad. Ersetze die Beispielstufe durch einen `stage`-Aufruf pro Schritt, in Abhängigkeitsreihenfolge. Nutze die Bibliotheks-Helper: `stage`, `say`/`step`, `open_url`, `ask`/`ask_secret`, `write_env`, `set_secret`/`set_var`, `pause`/`confirm`. Setze `TOTAL_STAGES` auf die Anzahl der Stufen, die du geschrieben hast.
 
-Hold the bar the template sets: open the URL before asking for its value, use `ask_secret` for anything secret, `write_env` every persisted value, `set_secret` only the values CI actually needs, and `confirm` before any irreversible action. Each `stage` clears the screen so only the current step is visible: keep a stage to one focused task so nothing the human needs scrolls away. Don't touch the library above the marker.
+Halte den Standard, den das Template setzt: Öffne die URL, bevor du nach ihrem Wert fragst, nutze `ask_secret` für alles Geheime, schreibe mit `write_env` jeden persistierten Wert, setze mit `set_secret` nur die Werte, die CI tatsächlich braucht, und bestätige mit `confirm` vor jeder nicht umkehrbaren Aktion. Jede `stage` leert den Bildschirm, sodass nur der aktuelle Schritt sichtbar ist: Halte eine Stufe auf eine fokussierte Aufgabe beschränkt, damit dem Menschen nichts Benötigtes wegscrollt. Fass die Bibliothek oberhalb der Markierung nicht an.
 
-### 4. Verify and hand off
+### 4. Prüfen und übergeben
 
-- `bash -n <script>`; run `shellcheck` if available.
+- `bash -n <script>`; führe `shellcheck` aus, falls verfügbar.
 - `chmod +x <script>`.
-- Don't run it end-to-end yourself: it opens browsers and blocks on human input. Trace it statically instead: every value from step 1 is captured and lands where step 1 said, and every `set_secret` name exactly matches a `secrets.*` reference in CI.
-- Tell the user how to run it. If it's a repeatable setup path, commit it and link it from the README so the next person runs the script instead of asking an AI.
+- Führe es nicht selbst end-to-end aus: Es öffnet Browser und blockiert auf menschliche Eingabe. Verfolge es stattdessen statisch: Jeder Wert aus Schritt 1 wird erfasst und landet dort, wo Schritt 1 es festgelegt hat, und jeder `set_secret`-Name entspricht exakt einer `secrets.*`-Referenz in CI.
+- Sag dem Nutzer, wie er es ausführt. Falls es ein wiederholbarer Setup-Pfad ist, committe ihn und verlinke ihn aus der README, damit die nächste Person das Skript ausführt, statt eine KI zu fragen.

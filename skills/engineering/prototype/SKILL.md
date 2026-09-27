@@ -1,26 +1,26 @@
 ---
 name: prototype
-description: Build a throwaway prototype to answer a design question. Use when the user wants to sanity-check whether a state model or logic feels right, or explore what a UI should look like.
+description: "Erstellt einen Wegwerf-Prototyp, um eine Design-Frage zu beantworten. Verwenden, wenn der Nutzer prüfen möchte, ob ein Zustandsmodell oder eine Logik sich richtig anfühlt, oder erkunden möchte, wie eine UI aussehen sollte. „bau mir einen Prototyp dafür“, „lass uns das kurz als Wegwerf-Prototyp durchspielen“, „check mal, ob das State-Modell so passt“, „wie könnte die UI dafür aussehen“"
 ---
 
-# Prototype
+# Prototyp
 
-A prototype is **throwaway code that answers a question**. The question decides the shape.
+Ein Prototyp ist **Wegwerfcode, der eine Frage beantwortet**. Die Frage bestimmt die Form.
 
-## Pick a branch
+## Einen Zweig wählen
 
-Identify which question is being answered, using the user's prompt, the surrounding code, or by asking if the user is around:
+Ermittle, welche Frage beantwortet wird – anhand des Prompts des Nutzers, des umgebenden Codes, oder indem du nachfragst, falls der Nutzer erreichbar ist:
 
-- **"Does this logic / state model feel right?"** → [LOGIC.md](LOGIC.md). Build a single shareable HTML file (free-play buttons plus tabbed guided walkthroughs) that pushes the state machine through cases that are hard to reason about on paper, and that a non-developer can drive.
-- **"What should this look like?"** → [UI.md](UI.md). Generate several radically different UI variations on a single route, switchable via a URL search param and a floating bottom bar.
+- **„Fühlt sich diese Logik / dieses Zustandsmodell richtig an?“** → [LOGIC.md](LOGIC.md). Baue eine einzelne, teilbare HTML-Datei (Buttons zum freien Ausprobieren plus tabbed geführte Walkthroughs), die die Zustandsmaschine durch Fälle treibt, die auf dem Papier schwer nachzuvollziehen sind, und die auch jemand ohne Entwicklerhintergrund bedienen kann.
+- **„Wie sollte das aussehen?“** → [UI.md](UI.md). Erzeuge mehrere radikal unterschiedliche UI-Varianten auf einer einzigen Route, umschaltbar über einen URL-Suchparameter und eine schwebende Bottom-Bar.
 
-The two branches produce very different artifacts, so getting this wrong wastes the whole prototype. If the question is genuinely ambiguous and the user isn't reachable, default to whichever branch better matches the surrounding code (a backend module → logic; a page or component → UI) and state the assumption at the top of the prototype.
+Die beiden Zweige erzeugen sehr unterschiedliche Artefakte – triffst du hier die falsche Wahl, ist der ganze Prototyp hinfällig. Ist die Frage wirklich mehrdeutig und der Nutzer nicht erreichbar, wähle standardmäßig den Zweig, der besser zum umgebenden Code passt (ein Backend-Modul → Logik; eine Seite oder Komponente → UI), und notiere die Annahme oben im Prototyp.
 
-## Rules that apply to both
+## Regeln, die für beide gelten
 
-1. **Throwaway from day one, and clearly marked as such.** Locate the prototype code close to where it will actually be used (next to the module or page it's prototyping for) so context is obvious, but name it so a casual reader can see it's a prototype, not production. For throwaway UI routes, obey whatever routing convention the project already uses; don't invent a new top-level structure.
-2. **Trivial to run.** A UI prototype starts from one command in the project's task runner: `pnpm <name>`, `python <path>`, `bun <path>`, etc. A logic demo is a single HTML file the user double-clicks. Either way, no thinking required to start it.
-3. **No persistence by default.** State lives in memory. Persistence is the thing the prototype is _checking_, not something it should depend on. If the question explicitly involves a database, hit a scratch DB or a local file with a clear "PROTOTYPE, wipe me" name.
-4. **Skip the polish.** No tests, no error handling beyond what makes the prototype _runnable_, no abstractions. The point is to learn something fast.
-5. **Surface the state.** After every action (logic) or on every variant switch (UI), print or render the full relevant state so the user can see what changed.
-6. **Capture it when done.** Fold any validated decision into the real code, then capture the prototype itself as a **primary source**: commit it to a throwaway branch, out of main, and leave a context pointer to that branch on the implementation issue. Capture the answer too (the verdict and the question it settled) in the issue or a commit. The main branch keeps only the validated decision.
+1. **Von Anfang an Wegwerfcode – und klar als solcher gekennzeichnet.** Platziere den Prototyp-Code nah an der Stelle, wo er tatsächlich verwendet wird (neben dem Modul oder der Seite, für die er prototypisch entwickelt wird), damit der Kontext offensichtlich ist – benenne ihn aber so, dass ein flüchtiger Leser sofort erkennt: Prototyp, nicht Produktion. Für Wegwerf-UI-Routen halte dich an die Routing-Konvention, die im Projekt bereits existiert; erfinde keine neue Top-Level-Struktur.
+2. **Trivial zu starten.** Ein UI-Prototyp startet mit einem einzigen Befehl im Task-Runner des Projekts: `pnpm <name>`, `python <path>`, `bun <path>` usw. Eine Logik-Demo ist eine einzelne HTML-Datei, die der Nutzer per Doppelklick öffnet. So oder so: kein Nachdenken nötig, um sie zu starten.
+3. **Standardmäßig keine Persistenz.** Der Zustand lebt im Speicher. Persistenz ist das, was der Prototyp _überprüft_, nicht etwas, wovon er abhängen sollte. Geht es bei der Frage explizit um eine Datenbank, nutze eine Scratch-DB oder eine lokale Datei mit einem eindeutigen Namen wie "PROTOTYPE, wipe me".
+4. **Verzichte auf Feinschliff.** Keine Tests, keine Fehlerbehandlung über das hinaus, was den Prototyp _lauffähig_ macht, keine Abstraktionen. Es geht darum, schnell etwas zu lernen.
+5. **Mach den Zustand sichtbar.** Gib nach jeder Aktion (Logik) oder bei jedem Varianten-Wechsel (UI) den vollständigen relevanten Zustand aus, damit der Nutzer sieht, was sich geändert hat.
+6. **Halte das Ergebnis fest, wenn du fertig bist.** Übertrage jede validierte Entscheidung in den echten Code, und halte den Prototyp selbst als **Primärquelle** fest: committe ihn auf einen Wegwerf-Branch außerhalb von main und hinterlasse im Implementierungs-Issue einen Kontext-Verweis auf diesen Branch. Halte auch die Antwort fest (das Ergebnis und die Frage, die damit geklärt wurde) im Issue oder in einem Commit. Der main-Branch behält nur die validierte Entscheidung.

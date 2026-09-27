@@ -1,87 +1,87 @@
 ---
 name: setup-matt-pocock-skills
-description: "Configure this repo for the engineering skills: set up its issue tracker, triage label vocabulary, and domain doc layout. Run once before first use of the other engineering skills."
+description: "Konfiguriert dieses Repo für die Engineering-Skills: richtet den Issue-Tracker, das Triage-Label-Vokabular und das Layout der Domain-Docs ein. Einmalig vor der ersten Nutzung der anderen Engineering-Skills ausführen."
 disable-model-invocation: true
 ---
 
-# Setup Matt Pocock's Skills
+# Richte Matt Pococks Skills ein
 
-Scaffold the per-repo configuration that the engineering skills assume:
+Lege die Repo-spezifische Konfiguration an, von der die Engineering-Skills ausgehen:
 
-- **Issue tracker**: where issues live (GitHub by default; local markdown is also supported out of the box)
-- **Triage labels**: the strings used for the five canonical triage roles
-- **Domain docs**: where `CONTEXT.md` and ADRs live, and the consumer rules for reading them
+- **Issue-Tracker**: wo Issues verwaltet werden (standardmäßig GitHub; lokales Markdown wird ebenfalls von Haus aus unterstützt)
+- **Triage-Labels**: die Strings für die fünf kanonischen Triage-Rollen
+- **Domain-Docs**: wo `CONTEXT.md` und ADRs liegen, sowie die Regeln für Konsumenten, die sie lesen
 
-This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write.
+Dies ist ein prompt-gesteuerter Skill, kein deterministisches Skript. Erkunde, präsentiere, was du gefunden hast, hol dir die Bestätigung des Nutzers und schreibe dann.
 
-## Process
+## Ablauf
 
-### 1. Explore
+### 1. Erkunden
 
-Look at the current repo to understand its starting state. Read whatever exists; don't assume:
+Sieh dir das aktuelle Repo an, um seinen Ausgangszustand zu verstehen. Lies, was vorhanden ist; nimm nichts an:
 
-- `git remote -v` and `.git/config`: is this a GitHub repo? Which one?
-- `AGENTS.md` and `CLAUDE.md` at the repo root: does either exist? Is there already an `## Agent skills` section in either?
-- `CONTEXT.md` and `CONTEXT-MAP.md` at the repo root
-- `docs/adr/` and any `src/*/docs/adr/` directories
-- `docs/agents/`: does this skill's prior output already exist?
-- `.scratch/`: a sign that a local-markdown issue tracker convention is already in use
-- Is the `triage` skill installed? (a `triage` skill folder alongside this one, or `triage` in your available skills.) This decides whether Section B runs at all.
-- Monorepo signals: a `pnpm-workspace.yaml`, a `workspaces` field in `package.json`, or a populated `packages/*` with its own `src/`. These are present only in a genuinely large multi-package repo; their absence means single-context, which is almost every repo.
+- `git remote -v` und `.git/config`: Ist das ein GitHub-Repo? Welches?
+- `AGENTS.md` und `CLAUDE.md` im Repo-Root: Existiert eine davon? Gibt es dort bereits einen Abschnitt `## Agent skills`?
+- `CONTEXT.md` und `CONTEXT-MAP.md` im Repo-Root
+- `docs/adr/` und etwaige `src/*/docs/adr/`-Verzeichnisse
+- `docs/agents/`: Existiert die frühere Ausgabe dieses Skills bereits?
+- `.scratch/`: ein Hinweis darauf, dass bereits eine lokale-Markdown-Issue-Tracker-Konvention verwendet wird
+- Ist der Skill `triage` installiert? (ein `triage`-Skill-Ordner neben diesem, oder `triage` unter deinen verfügbaren Skills.) Das entscheidet, ob Abschnitt B überhaupt läuft.
+- Monorepo-Signale: eine `pnpm-workspace.yaml`, ein `workspaces`-Feld in `package.json`, oder ein befülltes `packages/*` mit eigenem `src/`. Diese treten nur bei einem wirklich großen Multi-Package-Repo auf; ihr Fehlen bedeutet Single-Context, was auf fast jedes Repo zutrifft.
 
-### 2. Present findings and ask
+### 2. Ergebnisse präsentieren und nachfragen
 
-Summarise what's present and what's missing. Then take the sections in order. One section, one answer, then the next.
+Fasse zusammen, was vorhanden ist und was fehlt. Gehe die Abschnitte dann der Reihe nach durch. Ein Abschnitt, eine Antwort, dann der nächste.
 
-Lead each section with the recommended answer so the user can accept it in a word. Give a one-line explainer only when the choice genuinely branches; skip the section entirely when exploration already settled it (Section B when `triage` isn't installed, Section C when there's no monorepo).
+Leite jeden Abschnitt mit der empfohlenen Antwort ein, damit der Nutzer sie mit einem Wort akzeptieren kann. Gib nur dann eine einzeilige Erklärung, wenn die Wahl tatsächlich verzweigt; überspringe den Abschnitt komplett, wenn die Erkundung das bereits geklärt hat (Abschnitt B, wenn `triage` nicht installiert ist, Abschnitt C, wenn es kein Monorepo gibt).
 
-**Section A: Issue tracker.**
+**Abschnitt A: Issue-Tracker.**
 
-> Explainer: The "issue tracker" is where issues live for this repo. Skills like `to-tickets`, `triage`, and `to-spec` read from and write to it. They need to know whether to call `gh issue create`, write a markdown file under `.scratch/`, or follow some other workflow you describe. Pick the place you actually track work for this repo.
+> Erklärung: Der „Issue-Tracker“ ist der Ort, an dem die Issues für dieses Repo geführt werden. Skills wie `to-tickets`, `triage` und `to-spec` lesen daraus und schreiben dorthin. Sie müssen wissen, ob sie `gh issue create` aufrufen, eine Markdown-Datei unter `.scratch/` schreiben oder einem anderen von dir beschriebenen Workflow folgen sollen. Wähle den Ort, an dem du die Arbeit an diesem Repo tatsächlich trackst.
 
-Default posture: these skills were designed for GitHub. If a `git remote` points at GitHub, propose that. If a `git remote` points at GitLab (`gitlab.com` or a self-hosted host), propose GitLab. Otherwise (or if the user prefers), offer:
+Standardhaltung: Diese Skills wurden für GitHub entworfen. Zeigt ein `git remote` auf GitHub, schlage das vor. Zeigt ein `git remote` auf GitLab (`gitlab.com` oder einen selbst gehosteten Host), schlage GitLab vor. Andernfalls (oder wenn der Nutzer es bevorzugt) biete an:
 
-- **GitHub**: issues live in the repo's GitHub Issues (uses the `gh` CLI)
-- **GitLab**: issues live in the repo's GitLab Issues (uses the [`glab`](https://gitlab.com/gitlab-org/cli) CLI)
-- **Local markdown**: issues live as files under `.scratch/<feature>/` in this repo (good for solo projects or repos without a remote)
-- **Other** (Jira, Linear, etc.): ask the user to describe the workflow in one paragraph; the skill will record it as freeform prose
+- **GitHub**: Issues liegen in den GitHub Issues des Repos (nutzt die `gh`-CLI)
+- **GitLab**: Issues liegen in den GitLab Issues des Repos (nutzt die [`glab`](https://gitlab.com/gitlab-org/cli)-CLI)
+- **Lokales Markdown**: Issues liegen als Dateien unter `.scratch/<feature>/` in diesem Repo (gut für Solo-Projekte oder Repos ohne Remote)
+- **Sonstiges** (Jira, Linear usw.): bitte den Nutzer, den Workflow in einem Absatz zu beschreiben; der Skill hält ihn als freien Fließtext fest
 
-Record the choice in `docs/agents/issue-tracker.md`. The GitHub and GitLab templates carry a "PRs as a request surface" flag, defaulted **off**. Leave it off and don't raise it: a user who wants external PRs in the triage queue can flip the flag in the file later.
+Halte die Wahl in `docs/agents/issue-tracker.md` fest. Die GitHub- und GitLab-Vorlagen tragen ein Flag „PRs as a request surface“, standardmäßig **aus**. Lass es aus und sprich es nicht an: Ein Nutzer, der externe PRs in der Triage-Queue haben möchte, kann das Flag später in der Datei umschalten.
 
-**Section B: Triage label vocabulary.** Skip this section entirely if the `triage` skill isn't installed (exploration told you), since an uninstalled skill needs no labels.
+**Abschnitt B: Triage-Label-Vokabular.** Überspringe diesen Abschnitt komplett, wenn der Skill `triage` nicht installiert ist (das hat dir die Erkundung schon gesagt), da ein nicht installierter Skill keine Labels braucht.
 
-If it is installed, ask exactly one question:
+Ist er installiert, stelle genau eine Frage:
 
-> Do you want to keep the default triage labels? (recommended: **yes**)
+> Möchtest du die Standard-Triage-Labels beibehalten? (empfohlen: **ja**)
 
-The defaults are the five canonical roles, each label string equal to its name: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. On **yes**, write them as-is. Only if the user says no, usually because their tracker already uses other names (e.g. `bug:triage` for `needs-triage`), collect the overrides so `triage` applies existing labels instead of creating duplicates.
+Die Standardwerte sind die fünf kanonischen Rollen, jeder Label-String entspricht seinem Namen: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. Bei **ja** schreibe sie unverändert. Nur wenn der Nutzer nein sagt, meist weil sein Tracker bereits andere Namen verwendet (z. B. `bug:triage` für `needs-triage`), sammle die Overrides, damit `triage` bestehende Labels anwendet, statt Duplikate anzulegen.
 
-**Section C: Domain docs.** Default to **single-context** (one `CONTEXT.md` + `docs/adr/` at the repo root). This fits almost every repo; write it without asking.
+**Abschnitt C: Domain-Docs.** Standard ist **Single-Context** (eine `CONTEXT.md` + `docs/adr/` im Repo-Root). Das passt auf fast jedes Repo; schreibe es, ohne zu fragen.
 
-Offer **multi-context** (a root `CONTEXT-MAP.md` pointing to per-context `CONTEXT.md` files) only when exploration found monorepo signals. Then confirm which layout they want.
+Biete **Multi-Context** (eine `CONTEXT-MAP.md` im Root, die auf kontextspezifische `CONTEXT.md`-Dateien verweist) nur an, wenn die Erkundung Monorepo-Signale gefunden hat. Bestätige anschließend, welches Layout gewünscht ist.
 
-### 3. Confirm and edit
+### 3. Bestätigen und bearbeiten
 
-Show the user a draft of:
+Zeig dem Nutzer einen Entwurf von:
 
-- The `## Agent skills` block to add to whichever of `CLAUDE.md` / `AGENTS.md` is being edited (see step 4 for selection rules)
-- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, and `docs/agents/triage-labels.md` (the last only when `triage` is installed)
+- Dem Block `## Agent skills`, der in `CLAUDE.md` bzw. `AGENTS.md` eingefügt wird, je nachdem, welche Datei bearbeitet wird (Auswahlregeln siehe Schritt 4)
+- Dem Inhalt von `docs/agents/issue-tracker.md`, `docs/agents/domain.md` und `docs/agents/triage-labels.md` (letztere nur, wenn `triage` installiert ist)
 
-Let them edit before writing.
+Lass ihn Änderungen vornehmen, bevor du schreibst.
 
-### 4. Write
+### 4. Schreiben
 
-**Pick the file to edit:**
+**Wähle die zu bearbeitende Datei:**
 
-- If `CLAUDE.md` exists, edit it.
-- Else if `AGENTS.md` exists, edit it.
-- If neither exists, ask the user which one to create; don't pick for them.
+- Existiert `CLAUDE.md`, bearbeite sie.
+- Andernfalls, wenn `AGENTS.md` existiert, bearbeite sie.
+- Existiert keine von beiden, frage den Nutzer, welche angelegt werden soll; entscheide nicht für ihn.
 
-Never create `AGENTS.md` when `CLAUDE.md` already exists (or vice versa); always edit the one that's already there.
+Lege niemals `AGENTS.md` an, wenn `CLAUDE.md` bereits existiert (und umgekehrt); bearbeite immer die bereits vorhandene Datei.
 
-If an `## Agent skills` block already exists in the chosen file, update its contents in-place rather than appending a duplicate. Don't overwrite user edits to the surrounding sections.
+Existiert in der gewählten Datei bereits ein `## Agent skills`-Block, aktualisiere dessen Inhalt an Ort und Stelle, statt ein Duplikat anzuhängen. Überschreibe keine Nutzeränderungen in den umgebenden Abschnitten.
 
-The block:
+Der Block:
 
 ```markdown
 ## Agent skills
@@ -99,18 +99,18 @@ The block:
 [one-line summary of layout: "single-context" or "multi-context"]. See `docs/agents/domain.md`.
 ```
 
-Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted.
+Nimm den Unterblock `### Triage labels` nur auf und schreibe `docs/agents/triage-labels.md` nur, wenn `triage` installiert ist und Abschnitt B gelaufen ist. Andernfalls entfallen beide.
 
-Then write the docs files using the seed templates in this skill folder as a starting point:
+Schreibe dann die Doku-Dateien und nutze dabei die Seed-Vorlagen in diesem Skill-Ordner als Ausgangspunkt:
 
-- [issue-tracker-github.md](./issue-tracker-github.md): GitHub issue tracker
-- [issue-tracker-gitlab.md](./issue-tracker-gitlab.md): GitLab issue tracker
-- [issue-tracker-local.md](./issue-tracker-local.md): local-markdown issue tracker
-- [triage-labels.md](./triage-labels.md): label mapping (only if `triage` is installed)
-- [domain.md](./domain.md): domain doc consumer rules + layout
+- [issue-tracker-github.md](./issue-tracker-github.md): GitHub-Issue-Tracker
+- [issue-tracker-gitlab.md](./issue-tracker-gitlab.md): GitLab-Issue-Tracker
+- [issue-tracker-local.md](./issue-tracker-local.md): lokaler-Markdown-Issue-Tracker
+- [triage-labels.md](./triage-labels.md): Label-Mapping (nur, wenn `triage` installiert ist)
+- [domain.md](./domain.md): Konsumentenregeln für Domain-Docs + Layout
 
-For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch using the user's description.
+Schreibe bei „sonstigen“ Issue-Trackern `docs/agents/issue-tracker.md` von Grund auf, basierend auf der Beschreibung des Nutzers.
 
-### 5. Done
+### 5. Fertig
 
-Tell the user the setup is complete and which engineering skills will now read from these files. Mention they can edit `docs/agents/*.md` directly later; re-running this skill is only necessary if they want to switch issue trackers or restart from scratch.
+Teile dem Nutzer mit, dass die Einrichtung abgeschlossen ist und welche Engineering-Skills nun aus diesen Dateien lesen. Erwähne, dass er `docs/agents/*.md` später direkt bearbeiten kann; ein erneutes Ausführen dieses Skills ist nur nötig, wenn er den Issue-Tracker wechseln oder von vorn beginnen möchte.

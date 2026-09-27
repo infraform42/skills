@@ -1,15 +1,15 @@
 ---
 name: implement
-description: "Implement a piece of work based on a spec or set of tickets."
+description: "Implementiert ein Arbeitspaket anhand einer Spec oder einer Menge von Tickets."
 disable-model-invocation: true
 ---
 
-Implement the work described by the user in the spec or tickets.
+Implementiere die vom Nutzer in der Spec oder den Tickets beschriebene Arbeit.
 
-Use /tdd where possible, at pre-agreed seams.
+Nutze /tdd, wo möglich, an vorher vereinbarten Nahtstellen (Seams).
 
-Run typechecking regularly, single test files regularly, and the full test suite once at the end.
+Führe regelmäßig Typechecking aus, regelmäßig einzelne Testdateien und am Ende einmal die vollständige Testsuite.
 
-Once done, use /code-review to review the work.
+Nutze anschließend /code-review, um die Arbeit zu überprüfen.
 
-Commit your work to the current branch.
+Committe deine Arbeit auf den aktuellen Branch.

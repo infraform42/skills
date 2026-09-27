@@ -1,87 +1,87 @@
 ---
 name: code-review
-description: "Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes: Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/spec asked for?). Runs both reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to \"review since X\"."
+description: "Überprüft die Änderungen seit einem festen Referenzpunkt (commit, branch, tag oder merge-base) entlang zweier Achsen: Standards (folgt der Code den in diesem Repo dokumentierten Coding-Standards?) und Spec (entspricht der Code dem, was das ursprüngliche Issue/die Spec verlangt hat?). Führt beide Reviews in parallelen Subagenten aus und stellt die Ergebnisse nebeneinander dar. Verwenden, wenn der Nutzer einen Branch, einen PR oder Work-in-Progress-Änderungen reviewen möchte, oder \"review since X\" verlangt. Typische Formulierungen: „review meine Änderungen seit main“, „check den PR gegen Standards und Spec“, „review diesen Branch seit dem letzten Merge-Base“, „prüf, ob mein Code zum Issue passt“."
 ---
 
-Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
+Zweiachsiges Review des Diffs zwischen `HEAD` und einem vom Nutzer angegebenen Fixpunkt:
 
-- **Standards**: does the code conform to this repo's documented coding standards?
-- **Spec**: does the code faithfully implement the originating issue / spec?
+- **Standards**: Folgt der Code den in diesem Repo dokumentierten Coding-Standards?
+- **Spec**: Setzt der Code das ursprüngliche Issue/die Spec originalgetreu um?
 
-Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
+Beide Achsen laufen als **parallele Subagenten**, damit sie sich gegenseitig nicht den Kontext verschmutzen; anschließend aggregiert dieser Skill ihre Ergebnisse.
 
-The issue tracker should have been provided to you. If `docs/agents/issue-tracker.md` is missing, tell the user to run `/setup-matt-pocock-skills`.
+Der Issue-Tracker sollte dir bereits bereitgestellt worden sein. Fehlt `docs/agents/issue-tracker.md`, weise den Nutzer an, `/setup-matt-pocock-skills` auszuführen.
 
-## Process
+## Prozess
 
-### 1. Pin the fixed point
+### 1. Fixpunkt festlegen
 
-Whatever the user said is the fixed point (a commit SHA, branch name, tag, `main`, `HEAD~5`, etc.). If they didn't specify one, ask for it.
+Nimm, was auch immer der Nutzer als Fixpunkt genannt hat (ein commit SHA, Branch-Name, Tag, `main`, `HEAD~5` usw.). Hat er keinen angegeben, frag danach.
 
-Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
+Halte den Diff-Befehl einmal fest: `git diff <fixed-point>...HEAD` (drei Punkte, damit der Vergleich gegen die merge-base erfolgt). Notiere außerdem die Liste der Commits über `git log <fixed-point>..HEAD --oneline`.
 
-Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here, not inside two parallel sub-agents.
+Bevor du weitermachst, bestätige, dass sich der Fixpunkt auflösen lässt (`git rev-parse <fixed-point>`) und der Diff nicht leer ist. Eine ungültige Ref oder ein leerer Diff sollte hier scheitern, nicht erst in zwei parallelen Subagenten.
 
-### 2. Identify the spec source
+### 2. Spec-Quelle identifizieren
 
-Look for the originating spec, in this order:
+Suche in dieser Reihenfolge nach der ursprünglichen Spec:
 
-1. Issue references in the commit messages (`#123`, `Closes #45`, GitLab `!67`, etc.), fetched via the workflow in `docs/agents/issue-tracker.md`.
-2. A path the user passed as an argument.
-3. A spec file under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
-4. If nothing is found, ask the user where the spec is. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
+1. Issue-Referenzen in den Commit-Messages (`#123`, `Closes #45`, GitLab `!67` usw.), abgerufen über den Workflow in `docs/agents/issue-tracker.md`.
+2. Ein Pfad, den der Nutzer als Argument übergeben hat.
+3. Eine Spec-Datei unter `docs/`, `specs/` oder `.scratch/`, die zum Branch-Namen oder Feature passt.
+4. Wird nichts gefunden, frag den Nutzer, wo die Spec liegt. Sagt er, es gebe keine, überspringt der **Spec**-Subagent und meldet "no spec available".
 
-### 3. Identify the standards sources
+### 3. Standards-Quellen identifizieren
 
-Anything in the repo that documents how code should be written, such as `CODING_STANDARDS.md` or `CONTRIBUTING.md`.
+Alles im Repo, das dokumentiert, wie Code geschrieben werden soll, etwa `CODING_STANDARDS.md` oder `CONTRIBUTING.md`.
 
-On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below: a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:
+Zusätzlich zu allem, was das Repo dokumentiert, trägt die Standards-Achse immer die folgende **Smell-Baseline**: eine feste Menge von Fowler-Code-Smells (_Refactoring_, Kap. 3), die auch dann gilt, wenn ein Repo nichts dokumentiert. Zwei Regeln binden sie:
 
-- **The repo overrides.** A documented repo standard always wins; where it endorses something the baseline would flag, suppress the smell.
-- **Always a judgement call.** Each smell is a labelled heuristic ("possible Feature Envy"), never a hard violation. Like any standard here, skip anything tooling already enforces.
+- **Das Repo überstimmt.** Ein dokumentierter Repo-Standard gewinnt immer; billigt er etwas, das die Baseline anmerken würde, unterdrücke den Smell.
+- **Immer eine Ermessensfrage.** Jeder Smell ist eine benannte Heuristik ("possible Feature Envy"), nie eine harte Verletzung. Wie bei jedem Standard hier: überspringe alles, was Tooling bereits erzwingt.
 
-Each smell reads *what it is* → *how to fix*; match it against the diff:
+Jeder Smell liest sich als *was er ist* → *wie man ihn behebt*; gleiche ihn mit dem Diff ab:
 
-- **Mysterious Name**: a function, variable, or type whose name doesn't reveal what it does or holds. → rename it; if no honest name comes, the design's murky.
-- **Duplicated Code**: the same logic shape appears in more than one hunk or file in the change. → extract the shared shape, call it from both.
-- **Feature Envy**: a method that reaches into another object's data more than its own. → move the method onto the data it envies.
-- **Data Clumps**: the same few fields or params keep travelling together (a type wanting to be born). → bundle them into one type, pass that.
-- **Primitive Obsession**: a primitive or string standing in for a domain concept that deserves its own type. → give the concept its own small type.
-- **Repeated Switches**: the same `switch`/`if`-cascade on the same type recurs across the change. → replace with polymorphism, or one map both sites share.
-- **Shotgun Surgery**: one logical change forces scattered edits across many files in the diff. → gather what changes together into one module.
-- **Divergent Change**: one file or module is edited for several unrelated reasons. → split so each module changes for one reason.
-- **Speculative Generality**: abstraction, parameters, or hooks added for needs the spec doesn't have. → delete it; inline back until a real need shows.
-- **Message Chains**: long `a.b().c().d()` navigation the caller shouldn't depend on. → hide the walk behind one method on the first object.
-- **Middle Man**: a class or function that mostly just delegates onward. → cut it, call the real target direct.
-- **Refused Bequest**: a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
+- **Mysterious Name**: Eine Funktion, Variable oder ein Typ, deren Name nicht verrät, was sie tut oder enthält. → Benenne um; fällt kein ehrlicher Name ein, ist das Design unklar.
+- **Duplicated Code**: Dieselbe Logikstruktur taucht in mehr als einem Hunk oder einer Datei der Änderung auf. → Extrahiere die gemeinsame Struktur, rufe sie von beiden Stellen auf.
+- **Feature Envy**: Eine Methode, die stärker auf die Daten eines anderen Objekts zugreift als auf die eigenen. → Verschiebe die Methode zu den Daten, die sie begehrt.
+- **Data Clumps**: Dieselben wenigen Felder oder Parameter reisen immer zusammen (ein Typ, der geboren werden will). → Bündle sie in einem Typ und übergib diesen.
+- **Primitive Obsession**: Ein Primitive oder String steht für ein Fachkonzept, das einen eigenen Typ verdient. → Gib dem Konzept einen eigenen kleinen Typ.
+- **Repeated Switches**: Dieselbe `switch`/`if`-Kaskade über denselben Typ wiederholt sich über die Änderung hinweg. → Ersetze sie durch Polymorphie oder eine Map, die sich beide Stellen teilen.
+- **Shotgun Surgery**: Eine logische Änderung erzwingt verstreute Edits über viele Dateien im Diff. → Sammle, was zusammen ändert, in einem Modul.
+- **Divergent Change**: Eine Datei oder ein Modul wird aus mehreren unzusammenhängenden Gründen bearbeitet. → Teile so, dass jedes Modul sich nur aus einem Grund ändert.
+- **Speculative Generality**: Abstraktion, Parameter oder Hooks für Bedürfnisse hinzugefügt, die die Spec nicht hat. → Lösche sie; inline zurück, bis sich ein echter Bedarf zeigt.
+- **Message Chains**: Lange `a.b().c().d()`-Navigation, von der der Aufrufer nicht abhängen sollte. → Verstecke den Durchlauf hinter einer Methode am ersten Objekt.
+- **Middle Man**: Eine Klasse oder Funktion, die größtenteils nur weiterdelegiert. → Entferne sie, rufe das eigentliche Ziel direkt auf.
+- **Refused Bequest**: Eine Subklasse oder Implementierung, die das meiste ignoriert oder überschreibt, was sie erbt. → Verzichte auf die Vererbung, nutze Komposition.
 
-### 4. Spawn both sub-agents in parallel
+### 4. Beide Subagenten parallel starten
 
-**Standards sub-agent prompt** should include:
+Der **Standards-Subagent-Prompt** sollte enthalten:
 
-- The full diff command and commit list.
-- The list of standards-source files you found in step 3, **plus the smell baseline from step 3** pasted in full (the sub-agent has no other access to it).
-- The brief: "Report, per file/hunk where relevant, (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls: documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard overrides the baseline. Skip anything tooling enforces. Under 400 words."
+- Den vollständigen Diff-Befehl und die Commit-Liste.
+- Die Liste der Standards-Quelldateien, die du in Schritt 3 gefunden hast, **plus die Smell-Baseline aus Schritt 3** vollständig eingefügt (der Subagent hat sonst keinen Zugriff darauf).
+- Den Auftrag: "Melde pro Datei/Hunk, wo relevant: (a) jede Stelle, an der der Diff einen dokumentierten Standard verletzt: zitiere den Standard (Datei + Regel); und (b) jeden Baseline-Smell, den du entdeckst: benenne ihn und zitiere den Hunk. Unterscheide harte Verletzungen von Ermessensfragen: Verstöße gegen dokumentierte Standards können hart sein, Baseline-Smells sind aber immer Ermessensfragen, und ein dokumentierter Repo-Standard überstimmt die Baseline. Überspringe alles, was Tooling erzwingt. Unter 400 Wörtern."
 
-**Spec sub-agent prompt** should include:
+Der **Spec-Subagent-Prompt** sollte enthalten:
 
-- The diff command and commit list.
-- The path or fetched contents of the spec.
-- The brief: "Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Under 400 words."
+- Den Diff-Befehl und die Commit-Liste.
+- Den Pfad oder den abgerufenen Inhalt der Spec.
+- Den Auftrag: "Melde: (a) von der Spec verlangte Anforderungen, die fehlen oder unvollständig sind; (b) Verhalten im Diff, das nicht verlangt wurde (Scope Creep); (c) Anforderungen, die umgesetzt wirken, deren Implementierung aber falsch aussieht. Zitiere für jeden Befund die betreffende Spec-Zeile. Unter 400 Wörtern."
 
-If the spec is missing, skip the Spec sub-agent and note this in the final report.
+Fehlt die Spec, überspringe den Spec-Subagenten und vermerke dies im Abschlussbericht.
 
-### 5. Aggregate
+### 5. Aggregieren
 
-Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings, because the two axes are deliberately separate (see _Why two axes_).
+Präsentiere die beiden Berichte unter den Überschriften `## Standards` und `## Spec`, wortgetreu oder leicht bereinigt. Führe die Befunde **nicht** zusammen und ordne sie nicht neu, weil die beiden Achsen bewusst getrennt sind (siehe _Warum zwei Achsen_).
 
-End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes: that's the reranking the separation exists to prevent.
+Schließe mit einer einzeiligen Zusammenfassung: Gesamtzahl der Befunde pro Achse und das schwerwiegendste Issue _innerhalb jeder Achse_ (falls vorhanden). Wähle keinen einzelnen Gewinner über die Achsen hinweg: genau diese Neuordnung soll die Trennung verhindern.
 
-## Why two axes
+## Warum zwei Achsen
 
-A change can pass one axis and fail the other:
+Eine Änderung kann eine Achse bestehen und an der anderen scheitern:
 
-- Code that follows every standard but implements the wrong thing → **Standards pass, Spec fail.**
-- Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
+- Code, der jeden Standard befolgt, aber das Falsche umsetzt → **Standards bestanden, Spec gescheitert.**
+- Code, der genau das tut, was das Issue verlangt hat, aber die Konventionen des Projekts bricht → **Spec bestanden, Standards gescheitert.**
 
-Reporting them separately stops one axis from masking the other.
+Getrennte Berichterstattung verhindert, dass eine Achse die andere verdeckt.

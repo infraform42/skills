@@ -1,83 +1,83 @@
 ---
 name: to-tickets
-description: Break a plan, spec, or the current conversation into a set of tracer-bullet tickets, each declaring its blocking edges, published to the configured tracker (edges as text in one file per ticket locally, or native blocking links on a real tracker).
+description: Zerlegt einen Plan, eine Spec oder die aktuelle Konversation in eine Reihe von Tracer-Bullet-Tickets, wobei jedes seine blockierenden Kanten deklariert, und veröffentlicht sie im konfigurierten Tracker (Kanten als Text in je einer Datei pro Ticket lokal, oder native Blocking-Links auf einem echten Tracker).
 disable-model-invocation: true
 ---
 
 # To Tickets
 
-Break a plan, spec, or conversation into a set of **tickets**: tracer-bullet vertical slices, each declaring the tickets that **block** it.
+Zerlege einen Plan, eine Spec oder eine Konversation in eine Reihe von **Tickets**: vertikale Tracer-Bullet-Slices, wobei jedes die Tickets deklariert, die es **blockieren**.
 
-The issue tracker and triage label vocabulary should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
+Der Issue-Tracker und das Vokabular des Triage-Labels sollten dir bereits bereitgestellt worden sein. Falls nicht, sag dem Nutzer, dass er `/setup-matt-pocock-skills` ausführen soll.
 
-## Process
+## Ablauf
 
-### 1. Gather context
+### 1. Kontext sammeln
 
-Work from whatever is already in the conversation context. If the user passes a reference (a spec path, an issue number or URL) as an argument, fetch it and read its full body and comments.
+Arbeite mit dem, was bereits im Konversationskontext vorhanden ist. Wenn der Nutzer eine Referenz (einen Spec-Pfad, eine Issue-Nummer oder URL) als Argument übergibt, ruf sie ab und lies ihren vollständigen Inhalt sowie die Kommentare.
 
-### 2. Explore the codebase (optional)
+### 2. Codebase erkunden (optional)
 
-If you have not already explored the codebase, do so to understand the current state of the code. Ticket titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
+Falls du die Codebase noch nicht erkundet hast, tu dies, um den aktuellen Stand des Codes zu verstehen. Ticket-Titel und -Beschreibungen sollten das Domänen-Glossar-Vokabular des Projekts verwenden und ADRs in dem Bereich respektieren, den du bearbeitest.
 
-Look for opportunities to prefactor the code to make the implementation easier. "Make the change easy, then make the easy change."
+Suche nach Gelegenheiten, den Code zu prefaktorieren, um die Implementierung zu erleichtern. „Mach die Änderung leicht, dann mach die leichte Änderung.“
 
-### 3. Draft vertical slices
+### 3. Vertikale Slices entwerfen
 
-Break the work into **tracer bullet** tickets.
+Zerlege die Arbeit in **Tracer-Bullet**-Tickets.
 
 <vertical-slice-rules>
 
-- Each slice cuts a narrow but COMPLETE path through every layer (schema, API, UI, tests): vertical, NOT a horizontal slice of one layer
-- A completed slice is demoable or verifiable on its own
-- Each slice is sized to fit in a single fresh context window
-- Any prefactoring should be done first
+- Jedes Slice schneidet einen schmalen, aber VOLLSTÄNDIGEN Pfad durch jede Schicht (Schema, API, UI, Tests): vertikal, NICHT eine horizontale Scheibe einer einzelnen Schicht
+- Ein abgeschlossenes Slice ist für sich allein demonstrierbar oder verifizierbar
+- Jedes Slice ist so bemessen, dass es in ein einziges frisches Kontextfenster passt
+- Jegliches Prefaktorieren sollte zuerst erledigt werden
 
 </vertical-slice-rules>
 
-Give each ticket its **blocking edges**: the other tickets that must complete before it can start. A ticket with no blockers can start immediately.
+Gib jedem Ticket seine **blockierenden Kanten**: die anderen Tickets, die abgeschlossen sein müssen, bevor es beginnen kann. Ein Ticket ohne Blocker kann sofort starten.
 
-**Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify ticket; green is promised only there.
+**Breite Refactors sind die Ausnahme von der vertikalen Slice-Bildung.** Ein **breiter Refactor** ist eine mechanische Änderung (eine Spalte umbenennen, ein gemeinsam genutztes Symbol umtypisieren), deren **Blast Radius** über die gesamte Codebase streut, sodass eine einzelne Bearbeitung Tausende von Aufrufstellen auf einmal bricht und kein vertikales Slice grün landen kann. Zwing das nicht in einen Tracer-Bullet; sequenziere es stattdessen als **Expand–Contract**. Zuerst Expand: füge die neue Form neben der alten hinzu, sodass nichts bricht. Dann migriere die Aufrufstellen in Batches, deren Größe sich nach dem Blast Radius richtet (pro Package, pro Verzeichnis), jeder Batch ein eigenes Ticket, blockiert vom Expand, wobei CI von Batch zu Batch grün bleibt, weil die alte Form weiterhin existiert. Schließlich Contract: lösche die alte Form, sobald kein Aufrufer mehr übrig ist, in einem Ticket, das von jedem Migrate-Batch blockiert wird. Wenn selbst die Batches nicht allein grün bleiben können, behalte die Sequenz bei, aber lass sie sich einen Integrationsbranch teilen, der alle ein abschließendes Integrate-and-Verify-Ticket blockiert; grün wird nur dort versprochen.
 
-### 4. Quiz the user
+### 4. Den Nutzer befragen
 
-Present the proposed breakdown as a numbered list. For each ticket, show:
+Präsentiere die vorgeschlagene Aufteilung als nummerierte Liste. Zeige für jedes Ticket:
 
-- **Title**: short descriptive name
-- **Blocked by**: which other tickets (if any) must complete first
-- **What it delivers**: the end-to-end behaviour this ticket makes work
+- **Titel**: kurzer beschreibender Name
+- **Blockiert durch**: welche anderen Tickets (falls vorhanden) zuerst abgeschlossen sein müssen
+- **Was es liefert**: das Ende-zu-Ende-Verhalten, das dieses Ticket funktionsfähig macht
 
-Ask the user:
+Frag den Nutzer:
 
-- Does the granularity feel right? (too coarse / too fine)
-- Are the blocking edges correct: does each ticket only depend on tickets that genuinely gate it?
-- Should any tickets be merged or split further?
+- Stimmt die Granularität? (zu grob / zu fein)
+- Sind die blockierenden Kanten korrekt: hängt jedes Ticket nur von Tickets ab, die es tatsächlich gaten?
+- Sollten Tickets zusammengeführt oder weiter aufgeteilt werden?
 
-Iterate until the user approves the breakdown.
+Iteriere, bis der Nutzer die Aufteilung freigibt.
 
-### 5. Publish the tickets to the configured tracker
+### 5. Die Tickets im konfigurierten Tracker veröffentlichen
 
-Publish the approved tickets. **How** depends on the tracker `/setup-matt-pocock-skills` configured; the tickets are the same either way, only the shape of the blocking edges changes:
+Veröffentliche die freigegebenen Tickets. **Wie** hängt davon ab, welchen Tracker `/setup-matt-pocock-skills` konfiguriert hat; die Tickets sind in beiden Fällen dieselben, nur die Form der blockierenden Kanten unterscheidet sich:
 
-- **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
-- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking / sub-issue relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
+- **Lokale Dateien** → schreibe eine Datei pro Ticket unter `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, nummeriert ab `01` in Abhängigkeitsreihenfolge (Blocker zuerst). Das „Blockiert durch“ jeder Datei listet die Nummern/Titel auf, von denen sie abhängt. Verwende die untenstehende Vorlage pro Ticket-Datei: ein Ticket pro Datei, niemals eine einzige kombinierte Datei.
+- **Ein echter Issue-Tracker (GitHub, Linear, …)** → veröffentliche ein Issue pro Ticket in Abhängigkeitsreihenfolge (Blocker zuerst), sodass die blockierenden Kanten jedes Tickets auf echte Identifikatoren verweisen können. Nutze die native Blocking-/Sub-Issue-Beziehung der Plattform, sofern vorhanden; andernfalls setze das „Blockiert durch“ jedes Tickets auf die blockierenden Issues. Wende das Triage-Label `ready-for-agent` an, sofern nicht anders angewiesen; die Tickets sind konstruktionsbedingt für Agenten greifbar.
 
-Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
+Arbeite an der **Frontier** (die offene Front): jedes Ticket, dessen Blocker alle erledigt sind. Bei einer rein linearen Kette bedeutet das von oben nach unten.
 
-Do NOT close or modify any parent issue.
+Schließe oder verändere KEIN übergeordnetes Issue.
 
 <local-ticket-template>
 
-# <NN>: <Ticket title>
+# <NN>: <Ticket-Titel>
 
-**What to build:** the end-to-end behaviour this ticket makes work, from the user's perspective, not a layer-by-layer implementation list.
+**Was zu bauen ist:** das Ende-zu-Ende-Verhalten, das dieses Ticket funktionsfähig macht, aus Sicht des Nutzers, keine schichtweise Implementierungsliste.
 
-**Blocked by:** the numbers/titles of the tickets that gate this one, or "None (can start immediately)".
+**Blockiert durch:** die Nummern/Titel der Tickets, die dieses gaten, oder „Keine (kann sofort starten)“.
 
 **Status:** ready-for-agent
 
-- [ ] Acceptance criterion 1
-- [ ] Acceptance criterion 2
+- [ ] Abnahmekriterium 1
+- [ ] Abnahmekriterium 2
 
 </local-ticket-template>
 
@@ -85,21 +85,21 @@ Do NOT close or modify any parent issue.
 
 ## Parent
 
-A reference to the parent issue on the tracker (if the source was an existing issue, otherwise omit this section).
+Eine Referenz auf das übergeordnete Issue im Tracker (falls die Quelle ein bestehendes Issue war, andernfalls diesen Abschnitt weglassen).
 
-## What to build
+## Was zu bauen ist
 
-The end-to-end behaviour this ticket makes work, from the user's perspective, not layer-by-layer implementation.
+Das Ende-zu-Ende-Verhalten, das dieses Ticket funktionsfähig macht, aus Sicht des Nutzers, nicht schichtweise Implementierung.
 
-## Acceptance criteria
+## Abnahmekriterien
 
-- [ ] Criterion 1
-- [ ] Criterion 2
+- [ ] Kriterium 1
+- [ ] Kriterium 2
 
-## Blocked by
+## Blockiert durch
 
-- A reference to each blocking ticket, or "None (can start immediately)".
+- Eine Referenz auf jedes blockierende Ticket, oder „Keine (kann sofort starten)“.
 
 </issue-template>
 
-In either form, avoid specific file paths or code snippets: they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it and note briefly that it came from a prototype. Trim to the decision-rich parts, not a working demo, just the important bits.
+In beiden Formen vermeide konkrete Dateipfade oder Code-Snippets: sie veralten schnell. Ausnahme: Wenn ein Prototyp ein Snippet erzeugt hat, das eine Entscheidung präziser kodiert, als Prosa es könnte (Zustandsautomat, Reducer, Schema, Type-Shape), binde es inline ein und vermerke kurz, dass es von einem Prototyp stammt. Kürze auf die entscheidungsreichen Teile, nicht auf eine funktionierende Demo, nur die wichtigen Punkte.
