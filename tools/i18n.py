@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+"""i18n-Werkzeug für den de-Branch von infraform42/skills.
+
+  python tools/i18n.py list             # ausgelieferte SKILL.md (laut plugin.json auf main)
+  python tools/i18n.py stale            # neu oder veraltet → zu übersetzen
+  python tools/i18n.py translate PFAD   # genau einen Skill übersetzen
+"""
+import hashlib
+import json
+import re
+import subprocess
+import sys
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+LOCK = ROOT / ".i18n" / "translations.lock.json"
+PROMPT = ROOT / ".i18n" / "translator-prompt.md"
+EN_REF = "main"
+MODEL = "sonnet"
+FENCE = re.compile(r"^(`{3,}|~{3,})[^\n]*\n.*?^\1[ \t]*$", re.S | re.M)
+INLINE = re.compile(r"`[^`\n]+`")
+
+
+def git(*args: str) -> str:
+    return subprocess.run(["git", *args], cwd=ROOT, check=True,
+                          capture_output=True, text=True).stdout
+
+
+def en(path: str) -> str:
+    return git("show", f"{EN_REF}:{path}")
+
+
+def sha(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def shipped_skill_files() -> list[str]:
+    roots = json.loads(en(".claude-plugin/plugin.json")).get("skills")
+    if not roots:
+        sys.exit("plugin.json ohne skills-Feld – Skill-Liste manuell prüfen")
+    roots = [roots] if isinstance(roots, str) else roots
+    paths = [r.removeprefix("./").rstrip("/") for r in roots]
+    files = git("ls-tree", "-r", "--name-only", EN_REF, "--", *paths).splitlines()
+    return sorted(f for f in files if f.endswith("/SKILL.md"))
+
+
+def split(text: str) -> tuple[dict, str]:
+    m = re.match(r"\A---\n(.*?)\n---\n(.*)\Z", text, re.S)
+    if not m:
+        raise ValueError("Frontmatter fehlt oder beginnt nicht in Zeile 1")
+    return yaml.safe_load(m.group(1)) or {}, m.group(2)
+
+
+def fences(body: str) -> list[str]:
+    return [m.group(0) for m in FENCE.finditer(body)]
+
+
+def verify(src: str, dst: str) -> None:
+    fs, bs = split(src)
+    fd, bd = split(dst)
+    if list(fs) != list(fd):
+        raise ValueError(f"Frontmatter-Schlüssel geändert: {list(fs)} → {list(fd)}")
+    changed = [k for k in fs if k != "description" and fs[k] != fd[k]]
+    if changed:
+        raise ValueError(f"Felder dürfen nicht übersetzt werden: {changed}")
+    if len(str(fd.get("description", ""))) > 1024:
+        raise ValueError("description > 1024 Zeichen")
+    if fences(bs) != fences(bd):
+        raise ValueError("Codeblöcke verändert")
+    lost = set(INLINE.findall(FENCE.sub("", bs))) - set(INLINE.findall(FENCE.sub("", bd)))
+    if lost:
+        raise ValueError(f"Inline-Code fehlt/verändert: {sorted(lost)[:8]}")
+
+
+def load_lock() -> dict:
+    return json.loads(LOCK.read_text()) if LOCK.exists() else {}
+
+
+def save_lock(lock: dict) -> None:
+    LOCK.write_text(json.dumps(lock, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+
+
+def stale() -> None:
+    lock, files = load_lock(), shipped_skill_files()
+    for p in files:
+        if lock.get(p, {}).get("source_sha256") != sha(en(p)):
+            print(p)
+    for p in sorted(set(lock) - set(files)):
+        print(f"ENTFERNT/UMBENANNT upstream: {p}", file=sys.stderr)
+
+
+def claude_cmd() -> list[str]:
+    help_text = subprocess.run(["claude", "--help"], capture_output=True, text=True).stdout
+    if "--tools" not in help_text:
+        sys.exit("claude kennt --tools nicht – Claude Code aktualisieren")
+    return ["claude", "-p", "--output-format", "json", "--model", MODEL,
+            "--tools", "", "--append-system-prompt", PROMPT.read_text()]
+
+
+def translate(path: str) -> None:
+    src = en(path)
+    res = subprocess.run(
+        [*claude_cmd(), "Übersetze die über stdin gelieferte SKILL.md gemäß den Regeln."],
+        input=src, capture_output=True, text=True, cwd=tempfile.gettempdir())
+    if res.returncode:
+        raise RuntimeError(res.stderr.strip() or res.stdout[:500])
+    data = json.loads(res.stdout)
+    if data.get("is_error"):
+        raise RuntimeError(str(data.get("result")))
+    out = data["result"].strip()
+    out = re.sub(r"\A```(?:markdown|md)?\n(.*)\n```\Z", r"\1", out, flags=re.S).rstrip() + "\n"
+    verify(src, out)
+    target = ROOT / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(out)
+    lock = load_lock()
+    lock[path] = {"source_sha256": sha(src),
+                  "upstream_commit": git("rev-parse", EN_REF).strip(),
+                  "translated_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    save_lock(lock)
+    print(f"OK {path}  (Kosten: {data.get('total_cost_usd', '?')} USD)")
+
+
+def main() -> None:
+    cmd, *rest = sys.argv[1:] or ["stale"]
+    try:
+        if cmd == "list":
+            print(*shipped_skill_files(), sep="\n")
+        elif cmd in ("stale", "stale-ci"):
+            stale()
+        elif cmd == "translate" and len(rest) == 1:
+            translate(rest[0])
+        else:
+            sys.exit(__doc__)
+    except (ValueError, RuntimeError) as e:
+        sys.exit(f"FEHLER {rest[0] if rest else cmd}: {e}")
+
+
+if __name__ == "__main__":
+    main()
