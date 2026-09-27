@@ -122,6 +122,23 @@ def restore_fences(src: str, dst: str) -> str:
     return FENCE.sub(lambda m: next(it), dst)
 
 
+OVERRIDES = ROOT / ".i18n" / "overrides.yaml"
+
+
+def apply_override(path: str, text: str) -> str:
+    """Setzt eine feste description aus .i18n/overrides.yaml (einzeilige description vorausgesetzt)."""
+    if not OVERRIDES.exists():
+        return text
+    ov = (yaml.safe_load(OVERRIDES.read_text()) or {}).get(path) or {}
+    if "description" not in ov:
+        return text
+    line = "description: " + json.dumps(ov["description"], ensure_ascii=False)
+    new, n = re.subn(r"^description:.*$", lambda m: line, text, count=1, flags=re.M)
+    if n != 1:
+        raise ValueError("description-Zeile für Override nicht gefunden")
+    return new
+
+
 def translate(path: str) -> None:
     src = en(path)
     res = subprocess.run(
@@ -134,6 +151,7 @@ def translate(path: str) -> None:
         raise RuntimeError(str(data.get("result")))
     out = clean(data["result"])
     out = restore_fences(src, out)
+    out = apply_override(path, out)
     Path("/tmp/i18n_last_output.md").write_text(data["result"])
     verify(src, out)
     target = ROOT / path

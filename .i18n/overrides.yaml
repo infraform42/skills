@@ -1,0 +1,5 @@
+# Feste deutsche Werte, die nach jeder Übersetzung gesetzt werden (Pfad → Feld → Wert).
+skills/productivity/grilling/SKILL.md:
+  description: >-
+    Fragemethode für Pläne, Entwürfe und Entscheidungen – Entscheidungsbaum, Frontier,
+    Fragerunden mit empfohlenen Antworten. Baustein, den andere Skills per Namen aufrufen.

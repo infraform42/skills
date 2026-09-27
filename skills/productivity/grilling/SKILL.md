@@ -1,6 +1,6 @@
 ---
 name: grilling
-description: Grillt den Nutzer unnachgiebig zu einem Plan, einer Entscheidung oder einer Idee. Verwenden, wenn der Nutzer sein Denken einem Stresstest unterziehen will, oder bei jeder 'grill'-Auslöserphrase. „grill mich zu meinem Plan“, „stell mir kritische Fragen dazu“, „hinterfrag meine Entscheidung gründlich“, „nimm meine Idee auseinander“, „bohr bei diesem Vorhaben nach“
+description: "Fragemethode für Pläne, Entwürfe und Entscheidungen – Entscheidungsbaum, Frontier, Fragerunden mit empfohlenen Antworten. Baustein, den andere Skills per Namen aufrufen."
 ---
 
 Befrage den Nutzer unnachgiebig, bis ihr ein gemeinsames Verständnis erreicht habt. Bilde dies als **Entscheidungsbaum** ab: Jede Entscheidung verzweigt sich in die Entscheidungen, die von ihr abhängen.
